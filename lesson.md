@@ -84,6 +84,7 @@ This is the "database" json-server reads from and writes to. The data shape matc
 Open `package.json` and add a `server` script under `"scripts"`:
 
 ```json
+// package.json
 "scripts": {
   "dev": "vite",
   "server": "json-server --watch data/db.json --port 3001"
@@ -130,6 +131,7 @@ In this lesson we will use GET, POST, and DELETE. PUT and PATCH become relevant 
 Open `src/App.jsx`. Add an exported constant for the API base URL just before the `App` function, and replace the `customers` state initialisation with an empty array (we will load from the API instead):
 
 ```jsx
+// src/App.jsx
 export const API_BASE = "http://localhost:3001";
 
 function App() {
@@ -140,6 +142,7 @@ function App() {
 Now write a `loadCustomers` handler and add a button to the return that calls it. Place the button just below the `<h1>`:
 
 ```jsx
+// src/App.jsx
 const loadCustomers = async () => {
   const response = await fetch(`${API_BASE}/customers`);
   const data = await response.json();
@@ -163,6 +166,7 @@ The button works, but we do not want users to have to click a button just to see
 Your first instinct might be to call `loadCustomers()` directly in the component body, so it runs on every render:
 
 ```jsx
+// src/App.jsx
 function App() {
   const [customers, setCustomers] = useState([]);
 
@@ -205,6 +209,7 @@ Update  → render → DOM update → ✗  useEffect does not run again
 Add `useEffect` to the import at the top of the file:
 
 ```jsx
+// src/App.jsx
 import { useState, useEffect } from "react";
 ```
 
@@ -213,6 +218,7 @@ Now wrap `loadCustomers` in a `useEffect` with an empty dependency array. Becaus
 Remove both of these from `App.jsx`:
 
 ```jsx
+// src/App.jsx
 // Remove the standalone handler:
 const loadCustomers = async () => {
   const response = await fetch(`${API_BASE}/customers`);
@@ -229,6 +235,7 @@ const loadCustomers = async () => {
 Replace them with a single `useEffect`:
 
 ```jsx
+// src/App.jsx
 useEffect(() => {
   const loadCustomers = async () => {
     const response = await fetch(`${API_BASE}/customers`);
@@ -269,6 +276,7 @@ Add both status message styles to `App.css`:
 Then add two new pieces of state to `App`:
 
 ```jsx
+// src/App.jsx
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState(null);
 ```
@@ -276,6 +284,7 @@ const [error, setError] = useState(null);
 Now expand `loadCustomers` inside the `useEffect` to use `try / catch / finally`:
 
 ```jsx
+// src/App.jsx
 useEffect(() => {
   const loadCustomers = async () => {
     setLoading(true);
@@ -309,6 +318,7 @@ useEffect(() => {
 Add early-return guards just before the main `return` in `App`:
 
 ```jsx
+// src/App.jsx
 if (loading) return <p className="status-message">Loading customers...</p>;
 if (error)   return <p className="status-message error">Error: {error}</p>;
 ```
@@ -318,6 +328,7 @@ if (error)   return <p className="status-message error">Error: {error}</p>;
 Now that the `useEffect` loads real data, remove the import of `mockCustomers` and `generateCustomerId` from `mockData.js`:
 
 ```jsx
+// src/App.jsx
 // Remove this line:
 import { mockCustomers, generateCustomerId } from "./mockData";
 ```
@@ -369,10 +380,12 @@ The `color` prop reads directly from our CSS token so the spinner matches the ap
 Now add the import to `App.jsx` and replace the loading return:
 
 ```jsx
+// src/App.jsx
 import Spinner from "./components/Spinner";
 ```
 
 ```jsx
+// src/App.jsx
 // Replace:
 if (loading) return <p className="status-message">Loading customers...</p>;
 // With:
@@ -394,6 +407,7 @@ Your Add Customer form already exists and already collects `firstName`, `lastNam
 Add one new piece of state to track when the POST request is in-flight. This lets us disable the submit button to prevent double-submits:
 
 ```jsx
+// src/App.jsx
 const [submitting, setSubmitting] = useState(false);
 ```
 
@@ -402,6 +416,7 @@ const [submitting, setSubmitting] = useState(false);
 Replace the existing `handleAddCustomer` with this async version. The form fields and reset logic remain the same; the only change is that we call the API and use its response instead of constructing the object locally:
 
 ```jsx
+// src/App.jsx
 const handleAddCustomer = async (e) => {
   e.preventDefault();
   setSubmitting(true);
@@ -452,6 +467,7 @@ We use the response body (`created`) to update state rather than constructing th
 Update the submit button in the form to use the `submitting` flag:
 
 ```jsx
+// src/App.jsx
 <button type="submit" className="submit-button" disabled={submitting}>
   {submitting ? "Adding..." : "Add Customer"}
 </button>
@@ -470,6 +486,7 @@ You already have a `handleDeleteCustomer` function from Lesson 2.3. Right now it
 Replace the existing `handleDeleteCustomer` with this version:
 
 ```jsx
+// src/App.jsx
 const handleDeleteCustomer = async (customerId) => {
   try {
     const response = await fetch(`${API_BASE}/customers/${customerId}`, {
@@ -522,6 +539,7 @@ useEffect(() => { ... }, [selectedId]); // re-runs when selectedId changes
 In `App.jsx`, replace `selectedCustomer` (the full object) with `selectedId` (just the string). Update the state declaration and anywhere it is used:
 
 ```jsx
+// src/App.jsx
 // Replace:
 const [selectedCustomer, setSelectedCustomer] = useState(null);
 
@@ -532,6 +550,7 @@ const [selectedId, setSelectedId] = useState(null);
 Update the `CustomerCard` map to pass `setSelectedId` and compare against `selectedId`:
 
 ```jsx
+// src/App.jsx
 <CustomerCard
   key={customer.id}
   customer={customer}
@@ -544,6 +563,7 @@ Update the `CustomerCard` map to pass `setSelectedId` and compare against `selec
 Update the `handleDeleteCustomer` deselect logic:
 
 ```jsx
+// src/App.jsx
 if (selectedId === customerId) {
   setSelectedId(null);
 }
@@ -552,12 +572,14 @@ if (selectedId === customerId) {
 Pass `selectedId` to `CustomerDetail`:
 
 ```jsx
+// src/App.jsx
 <CustomerDetail selectedId={selectedId} />
 ```
 
 > The `onSelect` callback in `CustomerCard` calls `onSelect(customer)`, passing the whole object. We need it to pass only the ID. Open `CustomerCard.jsx` and change the `onClick` handler on the card `div`:
 >
 > ```jsx
+> // src/components/CustomerCard.jsx
 > // Change:
 > onClick={() => onSelect(customer)}
 > // To:
@@ -699,6 +721,7 @@ We will add an inline edit form to the detail panel. When the user clicks Edit, 
 First, add `handleUpdateCustomer` to `App.jsx`. It sends `PATCH /customers/{id}`, then updates the customer in the `customers` array so the card in the list reflects the change immediately:
 
 ```jsx
+// src/App.jsx
 const handleUpdateCustomer = async (customerId, updates) => {
   try {
     const response = await fetch(`${API_BASE}/customers/${customerId}`, {
@@ -724,6 +747,7 @@ const handleUpdateCustomer = async (customerId, updates) => {
 Pass it down to `CustomerDetail`:
 
 ```jsx
+// src/App.jsx
 <CustomerDetail selectedId={selectedId} onUpdate={handleUpdateCustomer} />
 ```
 
@@ -732,6 +756,7 @@ Pass it down to `CustomerDetail`:
 Now update `CustomerDetail` to support edit mode. Add three pieces of state at the top of the component, after the existing state:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 const [isEditing, setIsEditing] = useState(false);
 const [editForm, setEditForm] = useState({});
 const [saving, setSaving] = useState(false);
@@ -740,6 +765,7 @@ const [saving, setSaving] = useState(false);
 Add three handlers: one to enter edit mode, one to track field changes, and one to submit the PATCH:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 const handleEditClick = () => {
   setEditForm({
     firstName: customer.firstName,
@@ -780,6 +806,7 @@ const handleEditSubmit = async (e) => {
 Replace the final `return` block in `CustomerDetail` with this version, which uses a ternary to switch between the edit form and the read view:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 return (
   <div className={styles.panel}>
     {isEditing ? (
@@ -943,6 +970,7 @@ return (
 Add these rules to the bottom of `src/components/CustomerDetail.module.css`:
 
 ```css
+/* src/components/CustomerDetail.module.css */
 .panelHead {
   display: flex;
   align-items: flex-start;
@@ -1060,6 +1088,7 @@ Add both components at the top of `CustomerDetail.jsx`, above the `CustomerDetai
 `CustomerView` is purely presentational: it receives the customer data and a callback, and renders the read view:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 function CustomerView({ customer, onEditClick }) {
   return (
     <>
@@ -1121,6 +1150,7 @@ function CustomerView({ customer, onEditClick }) {
 `CustomerEditForm` owns all of its own state and logic. It receives `customer` (to pre-fill the form), `onUpdate` (to send the PATCH request), and `onDone` (a callback to hand control back to `CustomerDetail` once the save or cancel is complete):
 
 ```jsx
+// src/components/CustomerDetail.jsx
 function CustomerEditForm({ customer, onUpdate, onDone }) {
   const [editForm, setEditForm] = useState({
     firstName: customer.firstName,
@@ -1256,6 +1286,7 @@ function CustomerEditForm({ customer, onUpdate, onDone }) {
 With the two sub-components defined, `CustomerDetail` only needs to manage `isEditing` and handle the `onDone` callback. Replace the three pieces of state and three handlers added in Step 2 with just these:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 const [isEditing, setIsEditing] = useState(false);
 
 const handleEditClick = () => setIsEditing(true);
@@ -1273,6 +1304,7 @@ const handleDone = (updates) => {
 Then replace the final `return` block with the compact version:
 
 ```jsx
+// src/components/CustomerDetail.jsx
 return (
   <div className={styles.panel}>
     {isEditing ? (
@@ -1313,12 +1345,14 @@ You have fetched, added, and deleted customers via the API. Now apply what you k
 Add the state to `App.jsx`:
 
 ```jsx
+// src/App.jsx
 const [statusFilter, setStatusFilter] = useState("all");
 ```
 
 Extend the derived list (replace the existing `filteredCustomers`):
 
 ```jsx
+// src/App.jsx
 const filteredCustomers = customers
   .filter((c) => c.firstName.toLowerCase().includes(searchTerm.toLowerCase()))
   .filter((c) => statusFilter === "all" || c.status === statusFilter);
@@ -1327,6 +1361,7 @@ const filteredCustomers = customers
 Add the filter buttons and styles to the return, just above the `<div className="customer-list">`:
 
 ```jsx
+// src/App.jsx
 <div className="filter-bar">
   {["all", "active", "inactive"].map((f) => (
     <button
@@ -1343,6 +1378,7 @@ Add the filter buttons and styles to the return, just above the `<div className=
 Add the styles to `App.css`:
 
 ```css
+/* src/App.css */
 .filter-bar {
   display: flex;
   gap: var(--space-2);
