@@ -277,9 +277,11 @@ Then add two new pieces of state to `App`:
 
 ```jsx
 // src/App.jsx
-const [loading, setLoading] = useState(false);
+const [loading, setLoading] = useState(true);
 const [error, setError] = useState(null);
 ```
+
+> **Why start `loading` as `true`?** The `useEffect` below always fetches on mount, so the component is loading from the very first render. If `loading` started as `false`, the first render would show neither the loading message nor any data, a brief flash of an empty customer list, before the effect ran and flipped `loading` to `true`. Starting it as `true` means the loading guard applies immediately.
 
 Now expand `loadCustomers` inside the `useEffect` to use `try / catch / finally`:
 
